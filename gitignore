@@ -1,0 +1,23 @@
+# ── OS Files ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE / Editor ──────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ── SonarQube ─────────────────────────────────────────
+.sonar/
+.scannerwork/
+
+# ── Logs ──────────────────────────────────────────────
+*.log
+logs/
+
+# ── Zip / Archives (don't commit zip files) ───────────
+*.zip
+*.rar
+*.tar.gz
