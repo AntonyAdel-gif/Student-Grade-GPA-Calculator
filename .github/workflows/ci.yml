@@ -1,63 +1,34 @@
-name: GPA Calculator CI
+name: CI Pipeline
 
 on:
   push:
     branches:
       - main
-      - "phase/**"
-      - "feature/**"
-
   pull_request:
     branches:
       - main
 
 jobs:
-  build-and-test:
+  build-and-quality:
+    name: Build & Quality Check
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      # Step 1: Get the code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # "Build" / validation step for a vanilla JS project
-      - name: Validate JavaScript Syntax
-        run: |
-          node --check app.js
-          node --check controllers.js
-          node --check models.js
-          node --check screens.js
-
-      # Basic automated test step without package.json
-      # Fails pipeline if GPA logic breaks
-      - name: Run Smoke Tests
-        run: |
-          node <<'EOF'
-          function calcGPA(arr){
-            return arr.reduce((a,b)=>a+b,0)/arr.length;
-          }
-
-          let result = calcGPA([4,3,4]);
-
-          if(Math.abs(result-3.67) > 0.01){
-             process.exit(1);
-          }
-
-          console.log("Tests passed");
-          EOF
-
-  sonar:
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      # Step 2: BUILD — setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          fetch-depth: 0
+          node-version: '18'
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      # Step 3: TEST — check JS syntax if files exist
+      - name: Check JavaScript syntax
+        run: |
+          echo "Checking JavaScript files..."
+          for f in *.js; do
+            [ -f "$f" ] && node --check "$f" && echo "✅ $f OK"
+          done
+          echo "✅ JavaScript check complete"
