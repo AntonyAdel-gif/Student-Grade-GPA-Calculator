@@ -1,0 +1,57 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-quality:
+    name: Build & Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get the code from GitHub
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Validate that all required HTML/JS/CSS files exist
+      - name: Verify project files exist
+        run: |
+          echo "Checking required project files..."
+          test -f index.html    && echo "✅ index.html found"    || (echo "❌ index.html missing" && exit 1)
+          test -f app.js        && echo "✅ app.js found"        || (echo "❌ app.js missing" && exit 1)
+          test -f models.js     && echo "✅ models.js found"     || (echo "❌ models.js missing" && exit 1)
+          test -f controllers.js && echo "✅ controllers.js found" || (echo "❌ controllers.js missing" && exit 1)
+          test -f screens.js    && echo "✅ screens.js found"    || (echo "❌ screens.js missing" && exit 1)
+          test -f styles.css    && echo "✅ styles.css found"    || (echo "❌ styles.css missing" && exit 1)
+          echo "✅ All project files verified successfully."
+
+      # Step 3: Validate HTML structure
+      - name: Validate HTML
+        run: |
+          echo "Validating HTML file..."
+          grep -q "<!DOCTYPE html>" index.html && echo "✅ DOCTYPE found" || (echo "❌ DOCTYPE missing" && exit 1)
+          grep -q "<title>" index.html && echo "✅ Title tag found" || (echo "❌ Title missing" && exit 1)
+          grep -q "app.js" index.html && echo "✅ app.js linked" || (echo "❌ app.js not linked in HTML" && exit 1)
+          echo "✅ HTML validation passed."
+
+      # Step 4: Check JavaScript syntax for all JS files
+      - name: Check JavaScript syntax
+        run: |
+          echo "Checking JavaScript syntax..."
+          node --check app.js        && echo "✅ app.js syntax OK"
+          node --check models.js     && echo "✅ models.js syntax OK"
+          node --check controllers.js && echo "✅ controllers.js syntax OK"
+          node --check screens.js    && echo "✅ screens.js syntax OK"
+          echo "✅ All JavaScript files passed syntax check."
+
+      # Step 5: SonarQube scan for code quality
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
